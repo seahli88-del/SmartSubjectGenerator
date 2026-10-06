@@ -1,14 +1,20 @@
 import logging
 from typing import Literal
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from google import genai
 from pydantic import BaseModel, Field
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from slowapi.util import get_remote_address
 
 app = FastAPI(title="AI Subject Line Generator")
 logger = logging.getLogger(__name__)
+limiter = Limiter(key_func=get_remote_address)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 
 @app.get("/")
@@ -31,8 +37,9 @@ class GenerationRequest(BaseModel):
 
 
 @app.post("/generate-subjects")
-async def generate_subject_lines(request: GenerationRequest):
-    topic = request.topic.strip()
+@limiter.limit("5/minute")
+async def generate_subject_lines(request: Request, payload: GenerationRequest):
+    topic = payload.topic.strip()
     if not topic:
         raise HTTPException(
             status_code=400,
@@ -46,7 +53,7 @@ async def generate_subject_lines(request: GenerationRequest):
 
     prompt = (
         "Generate 5 high-converting email subject lines. "
-        f"Topic: {topic}. Tone: {request.tone}. "
+        f"Topic: {topic}. Tone: {payload.tone}. "
         "Output a numbered list 1-5 only."
     )
 

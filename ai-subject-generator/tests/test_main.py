@@ -84,3 +84,22 @@ def test_returns_unavailable_when_ai_client_is_missing(monkeypatch):
     )
 
     assert response.status_code == 503
+
+
+def test_limits_generation_requests_per_client_ip(monkeypatch):
+    generate_content = AsyncMock(
+        return_value=SimpleNamespace(text="1. A spring sale"),
+    )
+    monkeypatch.setattr(main, "ai_client", fake_ai_client(generate_content))
+    rate_limited_client = TestClient(main.app, client=("192.0.2.10", 12345))
+
+    responses = [
+        rate_limited_client.post(
+            "/generate-subjects",
+            json={"topic": "A spring sale", "tone": "Professional"},
+        )
+        for _ in range(6)
+    ]
+
+    assert [response.status_code for response in responses] == [200] * 5 + [429]
+    assert generate_content.await_count == 5

@@ -57,7 +57,7 @@ python -m pytest
 }
 ```
 
-A successful response contains a `subject_lines` string. The `topic` and `tone` fields must not be blank.
+A successful response contains a `subject_lines` string. The endpoint allows five generation requests per client IP per minute. The `topic` and `tone` fields must not be blank.
 
 ## Deploy to Render
 
@@ -66,6 +66,8 @@ A successful response contains a `subject_lines` string. The `topic` and `tone` 
 3. Set **Root Directory** to `ai-subject-generator` and use Docker deployment.
 4. Add `GEMINI_API_KEY` in the service's **Environment** settings.
 5. Deploy. The container listens on Render's `PORT` environment variable.
+
+Rate limits use in-memory storage, so they apply per running app process and reset when it restarts. If you scale to multiple instances, configure shared Redis-backed rate-limit storage to enforce a single limit across them.
 
 ## Security
 
