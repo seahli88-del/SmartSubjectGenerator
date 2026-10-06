@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Subject Line Generator</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 500px; margin: 50px auto; padding: 20px; color: #333; }
+        input, select, button { width: 100%; padding: 12px; margin: 10px 0; border-radius: 6px; border: 1px solid #ccc; box-sizing: border-box; }
+        button { background-color: #007bff; color: white; border: none; font-weight: bold; cursor: pointer; }
+        button:hover { background-color: #0056b3; }
+        pre { background: #f8f9fa; padding: 15px; border-radius: 6px; border: 1px solid #e9ecef; white-space: pre-wrap; font-size: 14px; }
+    </style>
+</head>
+<body>
+    <h2>AI Email Subject Line Generator</h2>
+    <label for="topic">What is your email campaign about?</label>
+    <input type="text" id="topic" placeholder="e.g., Year-End 50% discount sale on sports shoes">
+
+    <label for="tone">Choose Marketing Tone:</label>
+    <select id="tone">
+        <option value="Professional">Professional</option>
+        <option value="Urgent">Urgent / FOMO</option>
+        <option value="Funny">Funny &amp; Engaging</option>
+    </select>
+
+    <button type="button" onclick="generateSubjects()">Generate High-Converting Subjects</button>
+
+    <h3>Generated Options:</h3>
+    <pre id="output" aria-live="polite">Your AI variations will display here...</pre>
+
+    <script>
+        async function generateSubjects() {
+            const topic = document.getElementById('topic').value.trim();
+            const tone = document.getElementById('tone').value;
+            const output = document.getElementById('output');
+
+            if (!topic) {
+                output.innerText = 'Please enter an email campaign topic.';
+                return;
+            }
+
+            output.innerText = 'Analyzing variables and generating copywriting options...';
+
+            try {
+                const response = await fetch('/generate-subjects', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ topic, tone })
+                });
+                const data = await response.json();
+                output.innerText = data.subject_lines || data.detail || 'No subject lines were returned.';
+            } catch (err) {
+                output.innerText = 'Network Error: Could not connect to the backend API.';
+            }
+        }
+    </script>
+</body>
+</html>
