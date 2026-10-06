@@ -10,6 +10,8 @@ A small web application that generates five email subject line ideas with Google
 │   ├── static/index.html
 │   ├── main.py
 │   ├── requirements.txt
+│   ├── requirements-dev.txt
+│   ├── tests/test_main.py
 │   └── Dockerfile
 ├── copilot-blueprint.md
 └── README.md
@@ -34,6 +36,15 @@ uvicorn main:app --reload
 ```
 
 Open <http://127.0.0.1:8000>. FastAPI's interactive API documentation is at <http://127.0.0.1:8000/docs>.
+
+## Tests
+
+From the `ai-subject-generator` directory, install the development dependencies and run the API tests:
+
+```powershell
+python -m pip install -r requirements-dev.txt
+python -m pytest
+```
 
 ## API
 

@@ -1,12 +1,14 @@
-import os
+import logging
+from typing import Literal
 
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from google import genai
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 app = FastAPI(title="AI Subject Line Generator")
+logger = logging.getLogger(__name__)
 
 
 @app.get("/")
@@ -20,20 +22,21 @@ try:
     ai_client = genai.Client()
 except Exception as exc:
     ai_client = None
-    print(f"Connection Initialization Error: {exc}")
+    logger.exception("Gemini client initialization failed")
 
 
 class GenerationRequest(BaseModel):
-    topic: str
-    tone: str
+    topic: str = Field(max_length=500)
+    tone: Literal["Professional", "Urgent", "Funny"]
 
 
 @app.post("/generate-subjects")
 async def generate_subject_lines(request: GenerationRequest):
-    if not request.topic.strip() or not request.tone.strip():
+    topic = request.topic.strip()
+    if not topic:
         raise HTTPException(
             status_code=400,
-            detail="Missing required payload parameters.",
+            detail="Topic cannot be blank.",
         )
     if ai_client is None:
         raise HTTPException(
@@ -43,7 +46,7 @@ async def generate_subject_lines(request: GenerationRequest):
 
     prompt = (
         "Generate 5 high-converting email subject lines. "
-        f"Topic: {request.topic}. Tone: {request.tone}. "
+        f"Topic: {topic}. Tone: {request.tone}. "
         "Output a numbered list 1-5 only."
     )
 
@@ -54,7 +57,8 @@ async def generate_subject_lines(request: GenerationRequest):
         )
         return {"subject_lines": (response.text or "").strip()}
     except Exception as exc:
+        logger.exception("Gemini subject line generation failed")
         raise HTTPException(
-            status_code=500,
-            detail=f"Cloud AI Inference Failed: {exc}",
+            status_code=502,
+            detail="Subject generation failed. Please try again later.",
         ) from exc
