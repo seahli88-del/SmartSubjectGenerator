@@ -49,7 +49,7 @@ async def generate_subject_lines(request: GenerationRequest):
 
     try:
         response = await ai_client.aio.models.generate_content(
-            model="gemini-2.5-flash",
+            model="gemini-3.8-flash",
             contents=prompt,
         )
         return {"subject_lines": (response.text or "").strip()}
